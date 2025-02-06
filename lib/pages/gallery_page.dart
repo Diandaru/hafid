@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:frd_gallery/pages/favorites_page.dart';
+import 'package:frd_gallery/pages/home_page.dart';
 import 'package:image_picker/image_picker.dart';
 import '../helpers/database_helper.dart';
 
@@ -39,7 +41,7 @@ class _GalleryPageState extends State<GalleryPage> {
         // Simpan gambar ke database
         await DatabaseHelper.instance.insertImage(imageFile, date);
 
-        // Load gambar terbaru dari database
+        // Muat gambar terbaru dari database
         _loadImages();
       }
     }
@@ -47,16 +49,44 @@ class _GalleryPageState extends State<GalleryPage> {
 
   Future<void> _deleteImage(int id) async {
     await DatabaseHelper.instance.deleteImage(id);
-
-    // Load gambar terbaru setelah penghapusan
     _loadImages();
+  }
+
+  Future<void> _toggleFavorite(int id, bool isFavorite) async {
+    // Perbarui status favorit gambar
+    await DatabaseHelper.instance.updateFavoriteStatus(id, !isFavorite);
+
+    // Muat ulang gambar di galeri
+    _loadImages();
+
+    // Jika gambar baru saja ditambahkan ke favorit
+    if (!isFavorite) {
+      // Pop dialog setelah mengklik favorite
+      Navigator.of(context).pop();
+
+      // Navigasikan ke HomePage, lalu ke FavoritesPage
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const HomePage(), // Menavigasi kembali ke HomePage
+        ),
+      ).then((_) {
+        // Setelah kembali ke HomePage, navigasi langsung ke FavoritesPage
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const FavoritesPage(),
+          ),
+        );
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gallery'),
+        title: const Text('Galeri'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -91,41 +121,37 @@ class _GalleryPageState extends State<GalleryPage> {
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                              'Added on: ${imageData['date']}',
+                              'Ditambahkan pada: ${imageData['date']}',
                               style: const TextStyle(fontSize: 14),
                             ),
                           ),
-                          TextButton(
-                            onPressed: () {
-                              // Konfirmasi hapus gambar
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: const Text('Delete Image'),
-                                    content: const Text('Are you sure you want to delete this image?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          // Hapus gambar jika ya
-                                          _deleteImage(imageData['id']);
-                                          Navigator.of(context).pop(); // Tutup dialog
-                                          Navigator.of(context).pop(); // Tutup dialog gambar
-                                        },
-                                        child: const Text('Yes'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop(); // Tutup dialog
-                                        },
-                                        child: const Text('No'),
-                                      ),
-                                    ],
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  imageData['is_favorite'] == 1
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: imageData['is_favorite'] == 1
+                                      ? Colors.red
+                                      : null,
+                                ),
+                                onPressed: () {
+                                  _toggleFavorite(
+                                    imageData['id'],
+                                    imageData['is_favorite'] == 1,
                                   );
                                 },
-                              );
-                            },
-                            child: const Text('Delete'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  _deleteImage(imageData['id']);
+                                  Navigator.of(context).pop(); // Close dialog
+                                },
+                                child: const Text('Hapus'),
+                              ),
+                            ],
                           ),
                         ],
                       ),
