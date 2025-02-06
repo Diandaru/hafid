@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:frd_gallery/pages/favorites_page.dart';
-import 'package:frd_gallery/pages/home_page.dart';
+import 'package:Hafiz_gallery/pages/favorites_page.dart';
+import 'package:Hafiz_gallery/pages/home_page.dart';
 import 'package:image_picker/image_picker.dart';
 import '../helpers/database_helper.dart';
 

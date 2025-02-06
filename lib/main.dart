@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/home_page.dart';
+import 'package:Hafiz_gallery/main.dart';
 
 void main() {
   runApp(const MyApp());
